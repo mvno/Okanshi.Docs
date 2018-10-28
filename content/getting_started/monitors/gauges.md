@@ -19,6 +19,7 @@ The different gauges available are:
 | [DoubleGauge](#doublegauge) | No | Reports the last `double` value assigned |
 | [DecimalGauge](#decimalgauge) | No | Reports the last `decimal` value assigned |
 | [AverageGauge](#averagegauge) | Yes | Calculate the average value since the last reset |
+| [MinMaxAvgGauge](#minmaxavggauge) | Yes | Calculate the minimum, maximum and average value since the last reset |
 
 An aggregated gauge can be used to get the average queue length or the maximum records processed at the same time.
 
@@ -116,4 +117,19 @@ gauge.Set(1)
 gauge.Set(10)
 
 // The gauge will return 3 as the average value
+```
+
+### MinMaxAvgGauge
+
+The `MinMaxAvgGauge` is a combination of three gauges: `MinGauge`, `MaxGauge` and `AverageGauge`. It keeps track of the min, max and average values since last reset. This gauge is able to detect extreme values that would otherwise disappear in an average calculation. When you are in need of a gauge and you are unsure about what data you are going to get out, this gauge may be the gauge to use.
+
+An example from the trenches. As part of a performance measurement we found a suspicious function that looked performance expensive. Initial averages shoved that it contributed only very few milliseconds to the processing time. But almost by accident, we found that sometimes the input payload rose from 1k-3k to 500k, and the execution time likewise rose to seconds! Those spikes would have been averaged away with the `AverageGauge`.
+
+```csharp
+var gauge = new MinMaxAvgGauge(MonitorConfig.Build("Queue length"));
+gauge.Set(4)
+gauge.Set(1)
+gauge.Set(10)
+
+// The gauge will return 1 as the minimum value, 10 as the maximum value and 3 as the average value
 ```
